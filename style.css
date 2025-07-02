@@ -1,0 +1,295 @@
+/* AQUI COMEÇA O CSS */
+
+/* Estilos Globais e de Layout */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: black;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Container principal da simulação, como a área central amarela/laranja */
+#main-container {
+    width: 900px;
+    height: 600px;
+    background: linear-gradient(to bottom right, #f8d5a1, #f1a58e);
+    border: 2px solid #555;
+    border-radius: 10px;
+    margin-top: 20px;
+    position: relative;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+    box-sizing: border-box;
+}
+
+/* Top Bar com os círculos */
+#top-bar {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px;
+    box-sizing: border-box;
+}
+
+.circle-button {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid #555;
+    cursor: pointer;
+    box-shadow: 0 0 5px rgba(0,0,0,0.3);
+}
+#blue-circle {
+    background-color: #007bff;
+}
+#white-circle {
+    background-color: #f0f0f0;
+}
+
+/* Área do Canvas para o Capacitor e Controles */
+#capacitor-canvas-container {
+    display: flex;
+    width: 100%;
+    height: calc(100% - 100px - 80px); /* Altura ajustada para caber controles e o novo medidor de volts */
+    justify-content: space-around;
+    align-items: center;
+    margin-top: 10px;
+    position: relative;
+}
+
+#capacitor-visualization {
+    border: 1px solid #777;
+    background-color: rgba(255,255,255,0.7);
+    width: 400px;
+    height: 300px;
+}
+
+/* Controles da Direita */
+#controls-panel {
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-left: 20px;
+}
+
+.control-group-box {
+    background-color: #e0e0e0;
+    border: 2px solid #555;
+    border-radius: 8px;
+    padding: 10px;
+    color: #333;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+    position: relative;
+}
+.control-group-box label {
+    font-weight: bold;
+    font-size: 0.9em;
+    display: block;
+    margin-bottom: 5px;
+}
+.control-group-box input[type="range"] {
+    width: calc(100% - 20px);
+    margin: 5px 10px 0 10px;
+    -webkit-appearance: none;
+    height: 8px;
+    background: #d3d3d3;
+    outline: none;
+    opacity: 0.7;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+    border-radius: 5px;
+}
+.control-group-box input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #4CAF50;
+    cursor: pointer;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+.control-group-box input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #4CAF50;
+    cursor: pointer;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+.control-group-box span.value {
+    font-size: 1.1em;
+    font-weight: bold;
+    float: right;
+}
+
+/* Específicos para os controles */
+#d-control {
+    background-color: #d4edda;
+    border-color: #28a745;
+} /* Verde */
+#s-control {
+    background-color: #fce7e7;
+    border-color: #dc3545;
+} /* Vermelho */
+#capacitance-display {
+    background-color: #add8e6;
+    border-color: #007bff;
+} /* Azul claro */
+
+/* Estilos para os medidores de voltagem */
+.voltage-meter {
+    background-color: #ffe0b3;
+    border-color: #ffc107;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 10px;
+}
+.voltage-meter .meter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 5px;
+}
+.voltage-meter .value {
+    font-size: 2em;
+    text-align: center;
+    width: 100%;
+    display: block;
+    margin-top: 5px;
+}
+.voltage-meter .led {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: #28a745;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 10px;
+    box-shadow: 0 0 8px rgba(40, 167, 69, 0.7);
+}
+.voltage-meter input[type="range"] {
+    background: #c3e6cb;
+}
+.voltage-meter input[type="range"]::-webkit-slider-thumb {
+    background: #007bff;
+}
+.voltage-meter input[type="range"]::-moz-range-thumb {
+    background: #007bff;
+}
+
+/* Dielétrico control */
+#diel-control {
+    background-color: #a0c4ff;
+    border-color: #0056b3;
+    color: #333;
+    text-align: center;
+}
+#diel-control select {
+    width: calc(100% - 20px);
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #0056b3;
+    background-color: #f0f8ff;
+    font-size: 1em;
+    margin-bottom: 5px;
+}
+#diel-control .epsilon-r-value {
+    font-size: 1.1em;
+    font-weight: bold;
+    margin-top: 5px;
+    display: block;
+}
+
+/* Rodapé */
+#footer {
+    width: 100%;
+    height: 40px;
+    background-color: #333;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 15px;
+    box-sizing: border-box;
+    font-size: 0.8em;
+    color: #bbb;
+}
+#footer a {
+    color: #bbb;
+    text-decoration: none;
+    margin: 0 5px;
+}
+#footer a:hover {
+    text-decoration: underline;
+}
+
+/* Estilos para os Botões Arrastáveis Laterais */
+.draggable-sidebar-button {
+    position: absolute;
+    width: 150px;
+    height: 90px;
+    background-color: #333;
+    border: 1px solid #555;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: grab;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    opacity: 0.9;
+    transition: opacity 0.2s;
+    z-index: 100;
+}
+.draggable-sidebar-button:hover {
+    opacity: 1;
+}
+.draggable-sidebar-button img {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+}
+.draggable-sidebar-button span {
+    color: #fff;
+    font-size: 0.8em;
+    margin-top: 5px;
+}
+
+/* Posições iniciais dos botões arrastáveis (podem ser ajustadas) */
+#left-button-prev {
+    left: 10px;
+    top: 600px;
+}
+#left-button-info {
+    left: 10px;
+    top: 700px;
+}
+#right-button-next {
+    right: 10px;
+    top: 600px;
+}
+#right-button-foto {
+    right: 10px;
+    top: 700px;
+}
+
+/* AQUI TERMINA O CSS */
