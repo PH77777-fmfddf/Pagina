@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Capacitor</title>
+    <style>
+        /* Estilos Globais e de Layout */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: black; /* Fundo como na imagem */
+            color: #fff; /* Texto branco */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Alinha no topo */
+            min-height: 100vh;
+            overflow: hidden; /* Evita scroll desnecessário na body */
+            position: relative;
+        }
+
+        /* Container principal da simulação, como a área central amarela/laranja */
+        #main-container {
+            width: 900px; /* Largura aproximada da área central na imagem */
+            height: 600px; /* Altura aproximada */
+            background: linear-gradient(to bottom right, #f8d5a1, #f1a58e); /* Gradiente como na imagem */
+            border: 2px solid #555;
+            border-radius: 10px;
+            margin-top: 20px; /* Espaço do topo */
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px; /* Espaçamento interno */
+            box-sizing: border-box; /* Inclui padding na largura/altura */
+        }
+
+        /* Top Bar com os círculos */
+        #top-bar {
+            width: 100%;
+            height: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+
+        .circle-button {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1px solid #555;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+        }
+        #blue-circle { background-color: #007bff; }
+        #white-circle { background-color: #f0f0f0; }
+
+        /* Área do Canvas para o Capacitor e Controles */
+        #capacitor-canvas-container {
+            display: flex;
+            width: 100%;
+            height: calc(100% - 100px - 80px); /* Altura ajustada para caber controles e o novo medidor de volts */
+            justify-content: space-around;
+            align-items: center;
+            margin-top: 10px;
+            position: relative; /* Para posicionar elementos internos */
+        }
+
+        #capacitor-visualization {
+            border: 1px solid #777; /* Borda do "desenho" */
+            background-color: rgba(255,255,255,0.7); /* Fundo semi-transparente */
+            width: 400px; /* Largura do desenho do capacitor */
+            height: 300px; /* Altura do desenho do capacitor */
+        }
+
+        /* Controles da Direita */
+        #controls-panel {
+            width: 300px; /* Largura do painel de controles */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-left: 20px;
+        }
+
+        .control-group-box {
+            background-color: #e0e0e0;
+            border: 2px solid #555;
+            border-radius: 8px;
+            padding: 10px;
+            color: #333;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+            position: relative; /* Para o slider */
+        }
+        .control-group-box label {
+            font-weight: bold;
+            font-size: 0.9em;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .control-group-box input[type="range"] {
+            width: calc(100% - 20px); /* Ajusta a largura do slider */
+            margin: 5px 10px 0 10px;
+            -webkit-appearance: none;
+            height: 8px;
+            background: #d3d3d3;
+            outline: none;
+            opacity: 0.7;
+            -webkit-transition: .2s;
+            transition: opacity .2s;
+            border-radius: 5px;
+        }
+        .control-group-box input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        .control-group-box input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        .control-group-box span.value {
+            font-size: 1.1em;
+            font-weight: bold;
+            float: right;
+        }
+
+        /* Específicos para os controles */
+        #d-control { background-color: #d4edda; border-color: #28a745; } /* Verde */
+        #s-control { background-color: #fce7e7; border-color: #dc3545; } /* Vermelho */
+        #capacitance-display { background-color: #add8e6; border-color: #007bff; } /* Azul claro */
+        
+        /* Estilos para os medidores de voltagem */
+        .voltage-meter { /* Usando classe para que ambos possam ter o mesmo estilo base */
+            background-color: #ffe0b3; border-color: #ffc107; /* Laranja */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 5px 10px; /* Ajusta o padding para o novo layout */
+        }
+        .voltage-meter .meter-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        .voltage-meter .value { 
+            font-size: 2em; 
+            text-align: center; 
+            width: 100%; 
+            display: block; 
+            margin-top: 5px; /* Ajusta o margin */
+        }
+        .voltage-meter .led {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #28a745; /* Verde */
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 10px;
+            box-shadow: 0 0 8px rgba(40, 167, 69, 0.7);
+        }
+        .voltage-meter input[type="range"] {
+             background: #c3e6cb; /* Fundo do slider mais claro */
+        }
+        .voltage-meter input[type="range"]::-webkit-slider-thumb {
+            background: #007bff; /* Thumb azul */
+        }
+        .voltage-meter input[type="range"]::-moz-range-thumb {
+            background: #007bff; /* Thumb azul */
+        }
+
+
+        /* Dielétrico control */
+        #diel-control {
+            background-color: #a0c4ff; /* Azul mais escuro */
+            border-color: #0056b3;
+            color: #333;
+            text-align: center;
+        }
+        #diel-control select {
+            width: calc(100% - 20px);
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #0056b3;
+            background-color: #f0f8ff;
+            font-size: 1em;
+            margin-bottom: 5px;
+        }
+        #diel-control .epsilon-r-value {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-top: 5px;
+            display: block;
+        }
+
+        /* Rodapé */
+        #footer {
+            width: 100%;
+            height: 40px;
+            background-color: #333; /* Rodapé escuro como na imagem */
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            box-sizing: border-box;
+            font-size: 0.8em;
+            color: #bbb;
+        }
+        #footer a {
+            color: #bbb;
+            text-decoration: none;
+            margin: 0 5px;
+        }
+        #footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Estilos para os Botões Arrastáveis Laterais */
+        .draggable-sidebar-button {
+            position: absolute; /* Posição absoluta para poder arrastar */
+            width: 150px; /* Largura dos botões laterais */
+            height: 90px; /* Altura dos botões laterais */
+            background-color: #333; /* Cor de fundo */
+            border: 1px solid #555;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: grab; /* Cursor de arrastar */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            opacity: 0.9;
+            transition: opacity 0.2s;
+            z-index: 100; /* Garante que fiquem acima de outros elementos */
+        }
+        .draggable-sidebar-button:hover {
+            opacity: 1;
+        }
+        .draggable-sidebar-button img {
+            width: 60px; /* Tamanho das imagens dentro dos botões */
+            height: 60px;
+            object-fit: contain;
+        }
+        .draggable-sidebar-button span {
+            color: #fff;
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+
+        /* Posições iniciais dos botões arrastáveis (podem ser ajustadas) */
+        #left-button-prev {
+            left: 10px;
+            top: 600px; /* Ajuste para não sobrepor o simulador */
+        }
+        #left-button-info {
+            left: 10px;
+            top: 700px; /* Abaixo do anterior */
+        }
+        #right-button-next {
+            right: 10px;
+            top: 600px; /* Ajuste para não sobrepor o simulador */
+        }
+        #right-button-foto {
+            right: 10px;
+            top: 700px; /* Abaixo do próximo */
+        }
+    </style>
+</head>
+<body>
+    <div id="main-container">
+        <div id="top-bar">
+            <div class="circle-button" id="blue-circle"></div>
+            <div class="circle-button" id="white-circle"></div>
+            </div>
+
+        <div id="diel-control" class="control-group-box" style="position: absolute; top: 10px; right: 20px; width: 250px; text-align: left;">
+            <select id="diel-material-select">
+                <option value="1.00059">Ar</option>
+                <option value="2.1">Teflon</option>
+                <option value="3.5">Papel</option>
+                <option value="7.6" selected>Vidro</option>
+                <option value="80">Água (Destilada)</option>
+            </select>
+            <label>Permissividade Relativa ($\epsilon_r$): <span class="epsilon-r-value" id="epsilon-r-display">7.6</span></label>
+            <span class="epsilon-value" style="font-size: 0.9em;">$\epsilon_0 = 8.854 \ 187 \ 817 \ 6 \cdot 10^{-12} \ F \cdot m^{-1}$</span>
+        </div>
+
+        <div id="capacitor-canvas-container">
+            <canvas id="capacitor-visualization" width="400" height="300"></canvas>
+
+            <div id="controls-panel">
+                <div id="d-control" class="control-group-box">
+                    <label for="d-slider">Distância (d): <span class="value" id="d-display">4 mm</span></label>
+                    <input type="range" id="d-slider" min="1" max="20" value="4">
+                </div>
+
+                <div id="s-control" class="control-group-box">
+                    <label for="s-slider">Área (S): <span class="value" id="s-display">162 mm²</span></label>
+                    <input type="range" id="s-slider" min="10" max="500" value="162">
+                </div>
+
+                <div id="capacitance-display" class="control-group-box">
+                    Capacitância (C): <span class="value" id="capacitance-value">2.73 pF</span>
+                </div>
+                
+                <div id="top-voltage-meter" class="control-group-box voltage-meter">
+                    <div class="meter-header">
+                        <span class="led"></span> Voltagem (V):
+                    </div>
+                    <span class="value" id="top-voltage-value">0.0 V</span>
+                    <input type="range" id="top-voltage-slider" min="-100" max="100" value="0">
+                </div>
+
+                <div id="charge-display" class="control-group-box" style="background-color: #d8eaff; border-color: #6daae0;">
+                    Carga (Q): <span class="value" id="charge-value">0 pC</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="bottom-voltage-meter" class="control-group-box voltage-meter" style="
+            position: absolute; 
+            bottom: 60px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            width: 300px; /* Largura igual aos outros controles */
+            height: auto; /* Altura automática */
+            padding: 10px;
+        ">
+            <div class="meter-header">
+                <span class="led"></span> Voltagem (V):
+            </div>
+            <span class="value" id="bottom-voltage-value">0.0 V</span>
+            <input type="range" id="bottom-voltage-slider" min="-100" max="100" value="0">
+        </div>
+
+        <div id="footer">
+            </div>
+    </div>
+
+    <div class="draggable-sidebar-button" id="left-button-prev">
+        <img src="./images/up.png" alt="Anterior"> <span>Anterior</span>
+    </div>
+
+    <div class="draggable-sidebar-button" id="left-button-info">
+        <img src="./images/info.png" alt="Informações"> <span>Informações</span>
+    </div>
+
+    <div class="draggable-sidebar-button" id="right-button-next">
+        <img src="./images/down.png" alt="Próximo"> <span>Próximo</span>
+    </div>
+
+    <div class="draggable-sidebar-button" id="right-button-foto">
+        <img src="../../img/foto.gif" alt="Foto"> <span>Foto</span>
+    </div>
+
+    <script>
+        // --- Variáveis Globais e Constantes ---
+        const EPSILON_0 = 8.8541878176 * Math.pow(10, -12); // F/m (Permissividade do Vácuo)
+
+        const dielMaterialSelect = document.getElementById('diel-material-select');
+        const epsilonRDisplay = document.getElementById('epsilon-r-display');
+        const dSlider = document.getElementById('d-slider');
+        const dDisplay = document.getElementById('d-display');
+        const sSlider = document.getElementById('s-slider');
+        const sDisplay = document.getElementById('s-display');
+        const capacitanceValueSpan = document.getElementById('capacitance-value');
+        const chargeValueSpan = document.getElementById('charge-value'); // Novo: exibição da carga
+        
+        // Referências para o medidor de voltagem superior
+        const topVoltageSlider = document.getElementById('top-voltage-slider');
+        const topVoltageValueSpan = document.getElementById('top-voltage-value');
+
+        // NOVAS Referências para o medidor de voltagem inferior
+        const bottomVoltageSlider = document.getElementById('bottom-voltage-slider');
+        const bottomVoltageValueSpan = document.getElementById('bottom-voltage-value');
+
+        const canvas = document.getElementById('capacitor-visualization');
+        const ctx = canvas.getContext('2d');
+
+        // --- Variáveis de Estado da Simulação ---
+        let currentCapacitance = 0; // Armazena a capacitância em Farads (F)
+        let currentVoltage = 0;     // Armazena a voltagem em Volts (V)
+
+
+        // --- Funções de Cálculo e Atualização ---
+
+        function updateSimulation() {
+            const epsilonR = parseFloat(dielMaterialSelect.value);
+            let d_mm = parseFloat(dSlider.value); // Distância em mm
+            let S_mm2 = parseFloat(sSlider.value); // Área em mm²
+
+            // Converter para unidades SI (metros e metros quadrados)
+            let d_m = d_mm / 1000;
+            let S_m2 = S_mm2 / 1000000;
+
+            currentCapacitance = EPSILON_0 * epsilonR * (S_m2 / d_m); // Capacitância em Farads
+
+            // Atualiza os displays de Capacitância, Distância e Área
+            dDisplay.textContent = `${d_mm} mm`;
+            sDisplay.textContent = `${S_mm2} mm²`;
+            epsilonRDisplay.textContent = epsilonR;
+            let C_pF = currentCapacitance * Math.pow(10, 12); // Converter para pF para exibir
+            capacitanceValueSpan.textContent = `${C_pF.toFixed(2)} pF`;
+            
+            // Atualiza a Carga baseada na nova Capacitância e Voltagem atual
+            updateChargeDisplay();
+
+            // Redesenha o capacitor com as novas propriedades
+            drawCapacitor(d_mm, S_mm2, currentVoltage);
+        }
+
+        // Função para atualizar a exibição da Carga
+        function updateChargeDisplay() {
+            const Q_coulombs = currentCapacitance * currentVoltage; // Carga em Coulombs
+            const Q_picoCoulombs = Q_coulombs * Math.pow(10, 12); // Converter para pC (picoCoulombs) para exibir
+            chargeValueSpan.textContent = `${Q_picoCoulombs.toFixed(2)} pC`;
+        }
+
+        // Função para atualizar o medidor de voltagem e a simulação
+        function updateVoltage(sourceSlider) {
+            currentVoltage = parseFloat(sourceSlider.value);
+
+            // Sincroniza os dois sliders/displays de voltagem
+            topVoltageSlider.value = currentVoltage;
+            topVoltageValueSpan.textContent = `${currentVoltage.toFixed(1)} V`;
+            
+            bottomVoltageSlider.value = currentVoltage;
+            bottomVoltageValueSpan.textContent = `${currentVoltage.toFixed(1)} V`;
+
+            // Atualiza a Carga, pois a Voltagem mudou
+            updateChargeDisplay();
+
+            // Redesenha o capacitor para refletir a nova voltagem (campo elétrico/polaridade)
+            drawCapacitor(parseFloat(dSlider.value), parseFloat(sSlider.value), currentVoltage);
+        }
+
+
+        // --- Desenho do Capacitor no Canvas ---
+        function drawCapacitor(d_mm, S_mm2, voltage) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Limpa o canvas
+
+            const plateHeightMax = 200; 
+            const plateWidthMax = 300; 
+
+            let side_mm = Math.sqrt(S_mm2); 
+            let scaledSide = (side_mm / Math.sqrt(500)) * plateHeightMax * 0.8; 
+
+            let scaledDistance = (d_mm / 20) * 80; 
+
+            const plateThickness = 10; 
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            const plate1Y = centerY - scaledDistance / 2 - plateThickness / 2;
+            const plate2Y = centerY + scaledDistance / 2 - plateThickness / 2;
+
+            const plateX = centerX - scaledSide / 2;
+
+            // --- Desenhar Placas com Cores Baseadas na Voltagem ---
+            let plate1Color = '#C0C0C0'; // Cor neutra
+            let plate2Color = '#C0C0C0'; // Cor neutra
+
+            // Define as cores com base na voltagem
+            if (voltage > 0) {
+                plate1Color = '#FF4500'; // Vermelho para positivo (placa superior)
+                plate2Color = '#0000CD'; // Azul para negativo (placa inferior)
+            } else if (voltage < 0) {
+                plate1Color = '#0000CD'; // Azul para negativo (placa superior)
+                plate2Color = '#FF4500'; // Vermelho para positivo (placa inferior)
+            }
+
+            // Desenhar a placa superior
+            ctx.fillStyle = plate1Color; 
+            ctx.fillRect(plateX, plate1Y, scaledSide, plateThickness);
+            ctx.strokeStyle = '#555';
+            ctx.strokeRect(plateX, plate1Y, scaledSide, plateThickness);
+            ctx.fillStyle = 'darkred'; // Cor do texto 'S'
+            ctx.font = 'bold 40px Arial';
+            ctx.textAlign = 'center'; 
+            ctx.fillText('S', centerX, plate1Y + plateThickness / 2 + 15); 
+
+            // Desenhar a placa inferior
+            ctx.fillStyle = plate2Color;
+            ctx.fillRect(plateX, plate2Y, scaledSide, plateThickness);
+            ctx.strokeStyle = '#555';
+            ctx.strokeRect(plateX, plate2Y, scaledSide, plateThickness);
+            ctx.fillStyle = 'darkred';
+            ctx.fillText('S', centerX, plate2Y + plateThickness / 2 + 15);
+
+            // --- Desenhar Dielétrico ---
+  
