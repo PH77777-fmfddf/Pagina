@@ -507,4 +507,131 @@
             ctx.fillText('S', centerX, plate2Y + plateThickness / 2 + 15);
 
             // --- Desenhar Dielétrico ---
-  
+            ctx.fillStyle = 'rgba(173, 216, 230, 0.5)'; 
+            ctx.fillRect(plateX, plate1Y + plateThickness, scaledSide, scaledDistance);
+
+            // --- Desenhar Linha de "d" ---
+            ctx.strokeStyle = 'darkgreen';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(centerX, plate1Y + plateThickness);
+            ctx.lineTo(centerX, plate2Y);
+            ctx.stroke();
+            ctx.fillStyle = 'darkgreen';
+            ctx.font = 'bold 20px Arial';
+            ctx.fillText('d', centerX + 30, centerY); 
+
+            // --- Desenhar Hastes de Conexão ---
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(centerX, plate1Y);
+            ctx.lineTo(centerX, plate1Y - 40); 
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(centerX, plate2Y + plateThickness);
+            ctx.lineTo(centerX, plate2Y + plateThickness + 40); 
+            ctx.stroke();
+
+            // --- Desenhar Linhas de Campo Elétrico (Opcional, mais complexo) ---
+            // A intensidade do campo elétrico E = V/d
+            const electricFieldStrength = Math.abs(voltage / (d_mm / 1000)); // V/m
+
+            if (voltage !== 0) {
+                const numFieldLines = 5; // Número de linhas de campo
+                ctx.strokeStyle = 'rgba(0, 0, 255, 0.6)'; // Azul para campo
+                ctx.lineWidth = 1;
+                ctx.setLineDash([5, 5]); // Linhas tracejadas
+                
+                // Direção do campo: da placa positiva para a negativa
+                const fieldDirection = voltage > 0 ? 1 : -1; // 1 para cima, -1 para baixo
+
+                for (let i = 0; i < numFieldLines; i++) {
+                    const lineX = plateX + (scaledSide / (numFieldLines + 1)) * (i + 1);
+                    ctx.beginPath();
+                    // Início da linha na placa positiva, fim na negativa
+                    if (fieldDirection === 1) { // Campo para baixo (V > 0, + em cima, - em baixo)
+                        ctx.moveTo(lineX, plate1Y + plateThickness);
+                        ctx.lineTo(lineX, plate2Y);
+                    } else { // Campo para cima (V < 0, - em cima, + em baixo)
+                        ctx.moveTo(lineX, plate2Y);
+                        ctx.lineTo(lineX, plate1Y + plateThickness);
+                    }
+                    ctx.stroke();
+                    
+                    // Adicionar pequenas setas no meio das linhas (simplificado)
+                    const arrowY = centerY;
+                    const arrowSize = 5;
+                    ctx.beginPath();
+                    if (fieldDirection === 1) { // Seta para baixo
+                        ctx.moveTo(lineX - arrowSize, arrowY - arrowSize);
+                        ctx.lineTo(lineX, arrowY);
+                        ctx.lineTo(lineX + arrowSize, arrowY - arrowSize);
+                    } else { // Seta para cima
+                        ctx.moveTo(lineX - arrowSize, arrowY + arrowSize);
+                        ctx.lineTo(lineX, arrowY);
+                        ctx.lineTo(lineX + arrowSize, arrowY + arrowSize);
+                    }
+                    ctx.stroke();
+                }
+                ctx.setLineDash([]); // Reseta para linhas sólidas
+            }
+        }
+
+
+        // --- Event Listeners ---
+        dielMaterialSelect.addEventListener('change', updateSimulation);
+        dSlider.addEventListener('input', updateSimulation);
+        sSlider.addEventListener('input', updateSimulation);
+        
+        // Event Listeners para ambos os sliders de voltagem
+        topVoltageSlider.addEventListener('input', () => updateVoltage(topVoltageSlider));
+        bottomVoltageSlider.addEventListener('input', () => updateVoltage(bottomVoltageSlider));
+
+
+        // --- Funções para Arrastar Botões ---
+        function makeDraggable(element) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+            if (element) {
+                element.onmousedown = dragMouseDown;
+            }
+
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                element.style.top = (element.offsetTop - pos2) + "px";
+                element.style.left = (element.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+
+        // Aplicar funcionalidade de arrastar aos botões laterais
+        makeDraggable(document.getElementById('left-button-prev'));
+        makeDraggable(document.getElementById('left-button-info'));
+        makeDraggable(document.getElementById('right-button-next'));
+        makeDraggable(document.getElementById('right-button-foto'));
+
+        // --- Inicialização ---
+        updateSimulation(); // Calcula capacitância e desenha o capacitor na carga inicial
+        updateVoltage(topVoltageSlider); // Atualiza a voltagem inicial (de ambos os medidores) e a carga/desenho
+    </script>
+</body>
+</html>
